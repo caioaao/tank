@@ -2,7 +2,7 @@
   (:require [clojure.core.async :as async]))
 
 (defn- channel [capacity leak-ms]
-  (let [bucket (async/buffer capacity)]
+  (let [bucket (async/chan (async/buffer capacity))]
     (async/go-loop [result (async/<! bucket)]
       (when result
         (Thread/sleep leak-ms)))
@@ -13,6 +13,7 @@
     [this]
     [this timeout-ms])
   (maybe-put! [this])
+  (full? [this])
   (stop! [this]))
 
 (defrecord LeakyBucket [bucket-ch]
@@ -31,6 +32,9 @@
     (if (async/offer! channel ::bucket-token)
       ::sent
       ::dropped))
+
+  (full? [this]
+    (.full? (.buf bucket-ch)))
 
   (stop! [this]
     (async/close! channel)))
