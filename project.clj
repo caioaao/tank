@@ -8,7 +8,7 @@
   :profiles {:dev {:dependencies [[org.clojure/test.check "0.10.0-alpha3"]
                                   [nubank/matcher-combinators "0.4.2"]]
                    :plugins      [[lein-cljfmt "0.6.1"]]}}
-  :release-tasks [#_["deploy" "clojars"]
+  :release-tasks [["deploy" "clojars"]
                   ["change" "version"
                    "leiningen.release/bump-version" "patch"]
                   ["vcs" "commit"]

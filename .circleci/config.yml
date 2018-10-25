@@ -55,7 +55,7 @@ jobs:
       - run:
           name: run deploy
           command: |
-            lein deploy clojars
+            lein release
 
 workflows:
   version: 2
