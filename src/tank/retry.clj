@@ -14,7 +14,8 @@
   [retry-strategy max-attempts last-exc]
   (throw
    (ex-info "Couldn't execute function with number of attempts"
-            {:max-attempts   max-attempts
+            {:reason         ::max-attempts-reached
+             :max-attempts   max-attempts
              :retry-strategy retry-strategy
              :last-exception last-exc})))
 

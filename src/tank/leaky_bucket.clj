@@ -7,7 +7,6 @@
     (async/go-loop []
       (async/<! (async/timeout leak-ms))
       (when (async/<! bucket)
-        (println ".")
         (recur)))
     bucket))
 

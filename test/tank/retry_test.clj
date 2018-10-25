@@ -41,7 +41,8 @@
                     (tank.retry/with-simple-sleep 0 (dec n-attempts) (constantly true)
                       (proc))
                     (catch clojure.lang.ExceptionInfo ex
-                      (t/is (match? {:max-attempts   (dec n-attempts)
+                      (t/is (match? {:reason         ::tank.retry/max-attempts-reached
+                                     :max-attempts   (dec n-attempts)
                                      :retry-strategy ::tank.retry/simple-sleep
                                      :last-exception (m/equals proc-exception)}
                                     (ex-data ex))))))))

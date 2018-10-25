@@ -13,7 +13,7 @@
 
 (def random-exception (ex-info "A random fail" {}))
 
-(def circuit-breaker-trips-after-failed-attempts-prop
+(def circuit-breaker-trips-after-failed-attempts
   (prop/for-all [trip-threshold (gen/fmap inc gen/pos-int)]
                 (let [cb (tank.circuit-breaker/circuit-breaker trip-threshold a-very-large-time)
                       exceptions-count (atom 0)]
@@ -22,8 +22,12 @@
                       (tank.circuit-breaker/call! cb #(throw random-exception))
                       (catch clojure.lang.ExceptionInfo ex
                         (swap! exceptions-count inc))))
-                  (t/is (= ::tank.circuit-breaker/tripped
-                           (tank.circuit-breaker/call! cb #(throw random-exception))))
+                  (try
+                    (tank.circuit-breaker/call! cb #(throw random-exception))
+                    (catch Exception ex
+                      (t/is (match? {:reason         ::tank.circuit-breaker/tripped
+                                     :last-exception (m/equals random-exception)}
+                                    (ex-data ex)))))
                   (t/is (= trip-threshold @exceptions-count))
                   (tank.circuit-breaker/shutdown! cb))))
 
@@ -44,12 +48,12 @@
 (def circuit-breaker-never-trips-when-threshold-is-not-reached
   (prop/for-all [trip-threshold (gen/fmap inc gen/pos-int)]
                 (let [cb (tank.circuit-breaker/circuit-breaker trip-threshold 0)]
-                  (t/is (match? (for [_ (range (+ trip-threshold 10))]
-                                  (tank.circuit-breaker/call! cb (constantly ::success)))
-                                (repeat (+ trip-threshold 10) ::success)))
+                  (t/is (match? (repeat (+ trip-threshold 10) ::success)
+                                (for [_ (range (+ trip-threshold 10))]
+                                  (tank.circuit-breaker/call! cb (constantly ::success)))))
                   (tank.circuit-breaker/shutdown! cb))))
 
-(t/deftest circuit-breaker-trips-after-threshold
-  (tc/quick-check 100 circuit-breaker-trips-after-failed-attempts-prop)
+(t/deftest circuit-breaker
+  (tc/quick-check 100 circuit-breaker-trips-after-failed-attempts)
   (tc/quick-check 10 circuit-breaker-never-trips-if-recovers)
   (tc/quick-check 100 circuit-breaker-never-trips-when-threshold-is-not-reached))

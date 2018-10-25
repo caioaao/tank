@@ -27,7 +27,7 @@ If it fails to successfully run in the amount of attempts (in this case 5), it w
 
 ### Circuit breaker
 
-The [circuit breaker](https://martinfowler.com/bliki/CircuitBreaker.html) pattern is really useful for avoiding cascading failures in distributed systems. It behaves like an electrical circuit breaker, meaning that after some failed attempts it will fail immediately. In case of a immediate fail, it returns `:tank.circuit-breaker/failed`.
+The [circuit breaker](https://martinfowler.com/bliki/CircuitBreaker.html) pattern is really useful for avoiding cascading failures in distributed systems. It behaves like an electrical circuit breaker, meaning that after some failed attempts it will fail immediately. In case of a immediate fail, it throws an exception.
 
 The way it is implemented is by using a [leaky bucket algorithm](https://en.wikipedia.org/wiki/Leaky_bucket).
 
