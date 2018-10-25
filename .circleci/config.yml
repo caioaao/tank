@@ -55,6 +55,9 @@ jobs:
       - run:
           name: run deploy
           command: |
+            git config credential.helper 'cache --timeout=120'
+            git config user.email "caioaao@gmail.com"
+            git config user.name CircleCI
             lein release
 
 workflows:
