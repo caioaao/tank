@@ -3,19 +3,27 @@
 
 
 (defprotocol ICircuitBreaker
-  (call! [this proc & override-params]))
+  (tripped? [this])
+  (call! [this proc])
+  (shutdown! [this]))
 
 (defrecord SimpleCircuitBreaker [leaky-bucket]
   ICircuitBreaker
-  (call! [this proc & override-params]
-    (if (leaky-bucket/full? leaky-bucket)
+  (tripped? [_this]
+    (leaky-bucket/full? leaky-bucket))
+
+  (call! [this proc]
+    (if (tripped? this)
       ::tripped
       (try
         (proc)
         (catch Exception ex
           (leaky-bucket/put! leaky-bucket)
-          (throw ex))))))
+          (throw ex)))))
 
-(defn simple
+  (shutdown! [_this]
+    (leaky-bucket/stop! leaky-bucket)))
+
+(defn circuit-breaker
   [trip-threshold recovery-ms]
   (->SimpleCircuitBreaker (leaky-bucket/leaky-bucket trip-threshold recovery-ms)))
