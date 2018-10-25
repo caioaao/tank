@@ -31,6 +31,8 @@
               ::failed    (recur (inc attempt) v)))))))
 
 (defmacro with-simple-sleep
+  "Tries to run `body` for `max-attempts`. Between each attempt it will sleep for
+  `sleep-ms` seconds."
   [sleep-ms max-attempts catch-fn & body]
   `(generic (constantly ~sleep-ms) ::simple-sleep ~max-attempts ~catch-fn (fn [] ~@body)))
 
@@ -40,6 +42,9 @@
      (bigdec slot-time-ms)))
 
 (defmacro with-exponential-backoff
+  "Tries to run `body` for `max-attempts`. Uses an exponential backoff algorithm, meaning
+  that, for every attempt, it will wait K * `slot-time-ms`, where K is `2^c -
+  1`, `c` being the attempt index."
   [slot-time-ms max-attempts catch-fn & body]
   `(generic
      (fn [attempt#]
