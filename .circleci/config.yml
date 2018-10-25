@@ -1,0 +1,98 @@
+version: 2
+
+jobs:
+  build-and-test:
+    docker:
+      - image: circleci/clojure:lein-2.8.1
+    steps:
+      - checkout
+      - restore_cache:
+          key: deps-{{ checksum "project.clj" }}
+      - run:
+          command: |
+            lein deps
+      - save_cache:
+          key: deps-{{ checksum "project.clj" }}
+          paths:
+            - "~/.m2"
+      - run:
+          command: |
+            lein test
+
+  lint:
+    docker:
+      - image: circleci/clojure:lein-2.8.1
+    steps:
+      - checkout
+      - restore_cache:
+          key: deps-{{ checksum "project.clj" }}
+      - run:
+          command: |
+            lein deps
+      - save_cache:
+          key: deps-{{ checksum "project.clj" }}
+          paths:
+            - "~/.m2"
+      - run:
+          command: |
+            lein cljfmt check
+
+  deploy:
+    docker:
+      - image: circleci/clojure:lein-2.8.1
+    steps:
+      - checkout
+      - restore_cache:
+          key: deps-{{ checksum "project.clj" }}
+      - run:
+          name: deps
+          command: |
+            lein deps
+      - save_cache:
+          key: deps-{{ checksum "project.clj" }}
+          paths:
+            - "~/.m2"
+      - run:
+          name: verify git tag
+          command: |
+            . venv/bin/activate
+            python setup.py verify
+      - run:
+          name: create pypirc
+          command: |
+            echo -e "[pypi]" >> ~/.pypirc
+            echo -e "username = caioaao" >> ~/.pypirc
+            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+      - run:
+          name: create and deploy packages
+          command: |
+            . venv/bin/activate
+            python setup.py sdist
+            python setup.py bdist_wheel
+            twine upload dist/*
+
+workflows:
+  version: 2
+  build-test-and-deploy:
+    jobs:
+      - build-and-test:
+          filters:
+            tags:
+              only: /.*/
+      - lint:
+          filters:
+            tags:
+              only: /.*/
+      - deploy:
+          requires:
+            - build-and-test
+            - lint
+          filters:
+            tags:
+              only: /[0-9]+(\.[0-9]+)*([ab][0-9]*)?/
+            branches:
+              ignore: /.*/
+
+
+
+
