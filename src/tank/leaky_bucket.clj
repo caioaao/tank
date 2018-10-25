@@ -41,5 +41,8 @@
     (async/close! channel)))
 
 
-(defn leaky-bucket [capacity leak-ms]
+(defn leaky-bucket
+  "Returns a leaky bucket with defined capacity and leak in milliseconds. For more
+  info, see the wikipedia article: https://en.wikipedia.org/wiki/Leaky_bucket"
+  [capacity leak-ms]
   (->LeakyBucket (channel capacity leak-ms)))
