@@ -16,6 +16,6 @@
           (leaky-bucket/put! leaky-bucket)
           (throw ex))))))
 
-(defn simple-circuit-breaker
+(defn simple
   [trip-threshold recovery-ms]
   (->SimpleCircuitBreaker (leaky-bucket/leaky-bucket trip-threshold recovery-ms)))

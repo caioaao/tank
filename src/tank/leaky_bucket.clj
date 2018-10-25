@@ -1,11 +1,12 @@
 (ns tank.leaky-bucket
-  (:require [clojure.core.async :as async]))
+  (:require [clojure.core.async :as async]
+            [tank.utils :refer [sleep buffer-full?]]))
 
 (defn- channel [capacity leak-ms]
   (let [bucket (async/chan (async/buffer capacity))]
     (async/go-loop [result (async/<! bucket)]
       (when result
-        (Thread/sleep leak-ms)))
+        (sleep leak-ms)))
     bucket))
 
 (defprotocol ILeakyBucket
@@ -34,7 +35,7 @@
       ::dropped))
 
   (full? [this]
-    (.full? (.buf bucket-ch)))
+    (buffer-full? bucket-ch))
 
   (stop! [this]
     (async/close! channel)))
