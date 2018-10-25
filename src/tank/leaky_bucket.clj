@@ -4,9 +4,11 @@
 
 (defn- channel [capacity leak-ms]
   (let [bucket (async/chan (async/buffer capacity))]
-    (async/go-loop [result (async/<! bucket)]
-      (when result
-        (sleep leak-ms)))
+    (async/go-loop []
+      (async/<! (async/timeout leak-ms))
+      (when (async/<! bucket)
+        (println ".")
+        (recur)))
     bucket))
 
 (defprotocol ILeakyBucket

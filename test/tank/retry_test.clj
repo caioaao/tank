@@ -42,7 +42,7 @@
                       (proc))
                     (catch clojure.lang.ExceptionInfo ex
                       (t/is (match? {:max-attempts   (dec n-attempts)
-                                     :retry-strategy ::tank.retry/simple-retry
+                                     :retry-strategy ::tank.retry/simple-sleep
                                      :last-exception (m/equals proc-exception)}
                                     (ex-data ex))))))))
 
