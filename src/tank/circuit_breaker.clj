@@ -25,5 +25,12 @@
     (leaky-bucket/stop! leaky-bucket)))
 
 (defn circuit-breaker
+  "Creates a circuit breaker.
+  Params:
+
+  `trip-threshold`: number denoting amount of fails before the circuit
+  breaker is tripped
+
+  `recovery-ms`: time, in milliseconds, for resetting one error count."
   [trip-threshold recovery-ms]
   (->SimpleCircuitBreaker (leaky-bucket/leaky-bucket trip-threshold recovery-ms)))
