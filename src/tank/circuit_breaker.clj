@@ -1,7 +1,6 @@
 (ns tank.circuit-breaker
   (:require [tank.leaky-bucket :as leaky-bucket]))
 
-
 (defprotocol ICircuitBreaker
   (tripped? [this])
   (call! [this proc])

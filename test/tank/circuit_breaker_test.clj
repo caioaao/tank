@@ -49,7 +49,6 @@
                                 (repeat (+ trip-threshold 10) ::success)))
                   (tank.circuit-breaker/shutdown! cb))))
 
-
 (t/deftest circuit-breaker-trips-after-threshold
   (tc/quick-check 100 circuit-breaker-trips-after-failed-attempts-prop)
   (tc/quick-check 10 circuit-breaker-never-trips-if-recovers)

@@ -20,7 +20,7 @@
 
 (defn generic
   [sleep-fn retry-strategy max-attempts catch-fn proc]
-  (loop [attempt 0
+  (loop [attempt  0
          last-err nil]
     (if (>= attempt max-attempts)
       (throw! retry-strategy max-attempts last-err)
@@ -47,9 +47,9 @@
   1`, `c` being the attempt index."
   [slot-time-ms max-attempts catch-fn & body]
   `(generic
-     (fn [attempt#]
-       (backoff-time ~slot-time-ms attempt#))
-     ::exponential-backoff
-     ~max-attempts
-     ~catch-fn
-     (fn [] ~@body)))
+    (fn [attempt#]
+      (backoff-time ~slot-time-ms attempt#))
+    ::exponential-backoff
+    ~max-attempts
+    ~catch-fn
+    (fn [] ~@body)))

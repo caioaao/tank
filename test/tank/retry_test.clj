@@ -50,7 +50,6 @@
   (tc/quick-check 100 simple-retry-always-use-same-sleep)
   (tc/quick-check 100 simple-retry-throws-if-max-attempts-is-reached))
 
-
 (defn expected-backoff [slot-time-ms n-attempts]
   "For more info, see formula in https://en.wikipedia.org/wiki/Exponential_backoff#Expected_backoff"
   (/ (* slot-time-ms (tank.utils/quick-expt 2M n-attempts)) 2))
