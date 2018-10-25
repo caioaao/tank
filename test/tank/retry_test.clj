@@ -9,8 +9,6 @@
             [matcher-combinators.test]
             [matcher-combinators.matchers :as m]))
 
-(defmacro tap [x] `(let [result# ~x] (println '~x " => " result#) result#))
-
 (defn sleep-mock []
   (let [vals (atom [])]
     {:values-atom vals
@@ -33,8 +31,8 @@
                   (with-redefs [tank.utils/sleep sleep-mock]
                     (tank.retry/with-simple-sleep sleep-ms (inc n-attempts) (constantly true)
                       (proc))
-                    (t/is (and (= (count @values-atom) n-attempts)
-                               (every? #{sleep-ms} @values-atom)))))))
+                    (t/is (= (count @values-atom) n-attempts))
+                    (t/is (every? #{sleep-ms} @values-atom))))))
 
 (def simple-retry-throws-if-max-attempts-is-reached
   (prop/for-all [n-attempts (gen/fmap (partial + 10) gen/pos-int)]
@@ -51,3 +49,24 @@
 (t/deftest simple-retry
   (tc/quick-check 100 simple-retry-always-use-same-sleep)
   (tc/quick-check 100 simple-retry-throws-if-max-attempts-is-reached))
+
+
+(defn expected-backoff [slot-time-ms n-attempts]
+  "For more info, see formula in https://en.wikipedia.org/wiki/Exponential_backoff#Expected_backoff"
+  (/ (* slot-time-ms (tank.utils/quick-expt 2M n-attempts)) 2))
+
+(def exponential-backoff-sleep-ms-avg
+  (prop/for-all [slot-time-ms (gen/fmap inc gen/pos-int)
+                 n-attempts (gen/fmap (partial + 100) gen/pos-int)]
+                (let [{:keys [values-atom sleep-mock]} (sleep-mock)
+                      proc                             (fail-until n-attempts)]
+                  (with-redefs [tank.utils/sleep sleep-mock]
+                    (tank.retry/with-exponential-backoff slot-time-ms (inc n-attempts) (constantly true)
+                      (proc))
+                    (t/is (= (count @values-atom) n-attempts))
+                    (t/is (< (Math/abs (- (expected-backoff slot-time-ms n-attempts)
+                                          (-> (apply + @values-atom) (/ n-attempts))))
+                             0.01M))))))
+
+(t/deftest exponential-backoff
+  (tc/quick-check 100 exponential-backoff-sleep-ms-avg))
