@@ -53,23 +53,9 @@ jobs:
           paths:
             - "~/.m2"
       - run:
-          name: verify git tag
+          name: run deploy
           command: |
-            . venv/bin/activate
-            python setup.py verify
-      - run:
-          name: create pypirc
-          command: |
-            echo -e "[pypi]" >> ~/.pypirc
-            echo -e "username = caioaao" >> ~/.pypirc
-            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-      - run:
-          name: create and deploy packages
-          command: |
-            . venv/bin/activate
-            python setup.py sdist
-            python setup.py bdist_wheel
-            twine upload dist/*
+            lein deploy
 
 workflows:
   version: 2
