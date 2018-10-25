@@ -15,5 +15,5 @@
                   ["vcs" "push"]]
   :deploy-repositories [["clojars" {:url           "https://clojars.org/repo"
                                     :sign-releases false
-                                    :creds         {:username :env/clojars_username
-                                                    :password :env/clojars_password}}]])
+                                    :username      :env/clojars_username
+                                    :password      :env/clojars_password}]])
