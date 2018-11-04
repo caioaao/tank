@@ -7,7 +7,8 @@
                  [org.clojure/core.async "0.4.474"]]
   :profiles {:dev {:dependencies [[org.clojure/test.check "0.10.0-alpha3"]
                                   [nubank/matcher-combinators "0.4.2"]]
-                   :plugins      [[lein-cljfmt "0.6.1"]]}}
+                   :plugins      [[lein-cljfmt "0.6.1"]]}
+             :provided {:dependencies [[http-kit "2.2.0"]]}}
   :release-tasks [["deploy" "clojars"]
                   ["change" "version"
                    "leiningen.release/bump-version" "patch"]
