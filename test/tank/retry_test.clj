@@ -31,22 +31,24 @@
                 (let [{:keys [values-atom sleep-mock]} (sleep-mock)
                       proc                             (fail-until n-attempts)]
                   (with-redefs [tank.utils/sleep sleep-mock]
-                    (tank.retry/with-simple-sleep sleep-ms (inc n-attempts) (constantly true)
-                      (proc))
+                    (tank.retry/with
+                     (tank.retry/simple-sleep-config
+                      (inc n-attempts) sleep-ms
+                      :catch? (constantly true))
+                     (proc))
                     (t/is (= (count @values-atom) n-attempts))
                     (t/is (every? #{sleep-ms} @values-atom))))))
 
 (defspec simple-retry-throws-if-max-attempts-is-reached
   (prop/for-all [n-attempts (gen/fmap (partial + 10) gen/pos-int)]
-                (let [proc (fail-until n-attempts)]
+                (let [proc (fail-until n-attempts)
+                      config (tank.retry/simple-sleep-config (dec n-attempts) 0 :catch? (constantly true))]
                   (try
-                    (tank.retry/with-simple-sleep 0 (dec n-attempts) (constantly true)
-                      (proc))
+                    (tank.retry/with config (proc))
                     (catch clojure.lang.ExceptionInfo ex
-                      (t/is (match? {:reason         ::tank.retry/max-attempts-reached
-                                     :max-attempts   (dec n-attempts)
-                                     :retry-strategy ::tank.retry/simple-sleep
-                                     :last-exception (m/equals proc-exception)}
+                      (t/is (match? {:reason  ::tank.retry/max-attempts-reached
+                                     :details {:retry-config config
+                                               :last-failure (m/equals proc-exception)}}
                                     (ex-data ex))))))))
 
 (defn expected-backoff [slot-time-ms n-attempts]
@@ -59,6 +61,8 @@
 (defspec exponential-backoff-sleep-ms-avg 100
   (prop/for-all [slot-time-ms (gen/fmap inc gen/pos-int)]
                 (let [n-attempts    10
+                      slot-time-ms  1
+                      retry-config  (tank.retry/exponential-backoff-config n-attempts slot-time-ms :catch? (constantly true))
                       run-times     500
                       last-backoffs (atom [])]
                   (loop [run-counter 0]
@@ -66,8 +70,7 @@
                       (let [{:keys [values-atom sleep-mock]} (sleep-mock)
                             proc                             (fail-until n-attempts)]
                         (with-redefs [tank.utils/sleep sleep-mock]
-                          (tank.retry/with-exponential-backoff slot-time-ms n-attempts (constantly true)
-                            (proc)))
+                          (tank.retry/with retry-config (proc)))
                         (swap! last-backoffs conj (last @values-atom)))
 
                       (recur (inc run-counter))))
