@@ -39,7 +39,7 @@
     (buffer-full? bucket-ch))
 
   (stop! [this]
-    (async/close! channel)))
+    (async/close! bucket-ch)))
 
 (defn leaky-bucket
   "Returns a leaky bucket with defined capacity and leak in milliseconds. For more

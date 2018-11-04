@@ -13,16 +13,27 @@ The retry API is available in `tank.retry`. Currently there are two types of ret
 - Simple sleep: after each failed attempt, it will sleep for the specified amount of milliseconds
 - Exponential backoff: uses the [exponential backoff algorithm](https://en.wikipedia.org/wiki/Exponential_backoff) for determining how many seconds it should sleep between failed attempts.
 
-The usage is pretty simple. You pass the parameters for the strategy, a `catch-fn` to select which exceptions are retriable and the body that should run. Here's an example:
+The usage is pretty simple. You build a config for your strategy and pass it to the macro that will run it for you:
 
 ```clojure
 (require '[tank.retry])
 
-(tank.retry/with-exponential-backoff 10 5 (constantly true)
+(tank.retry/with (tank.retry/exponential-backoff-config 5 10 :catch? (constantly true))
   ...)
 ```
 
 If it fails to successfully run in the amount of attempts (in this case 5), it will throw an exception.
+
+As you may want to treat non-exceptions as errors, you can also pass a `:failed?` function that will check the evaluated body and, if returns `true`, will treat it as a retriable error:
+
+```clojure
+(require '[tank.retry])
+
+(tank.retry/with (tank.retry/exponential-backoff-config 5 10 :failed? (partial contains? :error))
+  ...)
+```
+
+__Important:__ By default it will treat every exception as unexpected and will re-throw it.
 
 
 ### Circuit breaker
@@ -42,6 +53,8 @@ Here's an example:
 ```
 
 This circuit breaker object can be shared between several calls (eg: calls to multiple endpoints from a single service can share a single circuit breaker).
+
+Just like `retry`, it can receive the optional keyword argument `failed?` to know when a successful execution should actually be treated as an error.
 
 ## License
 

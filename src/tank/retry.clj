@@ -1,56 +1,65 @@
 (ns tank.retry
-  (:require [tank.utils :refer [quick-expt sleep]]))
-
-(defn- try-run!
-  [proc catch-fn]
-  (try
-    [::succeeded (proc)]
-    (catch Exception ex
-      (if (catch-fn ex)
-        [::failed ex]
-        (throw ex)))))
+  (:require [tank.utils :refer [quick-expt]]
+            [tank.try-run :refer [try-run]]))
 
 (defn- throw!
-  [retry-strategy max-attempts last-exc]
+  [config last-failure]
   (throw
    (ex-info "Couldn't execute function with number of attempts"
-            {:reason         ::max-attempts-reached
-             :max-attempts   max-attempts
-             :retry-strategy retry-strategy
-             :last-exception last-exc})))
-
-(defn generic
-  [sleep-fn retry-strategy max-attempts catch-fn proc]
-  (loop [attempt  0
-         last-err nil]
-    (if (>= attempt max-attempts)
-      (throw! retry-strategy max-attempts last-err)
-      (do (sleep (sleep-fn attempt))
-          (let [[result v] (try-run! proc catch-fn)]
-            (case result
-              ::succeeded v
-              ::failed    (recur (inc attempt) v)))))))
-
-(defmacro with-simple-sleep
-  "Tries to run `body` for `max-attempts`. Between each attempt it will sleep for
-  `sleep-ms` seconds."
-  [sleep-ms max-attempts catch-fn & body]
-  `(generic (constantly ~sleep-ms) ::simple-sleep ~max-attempts ~catch-fn (fn [] ~@body)))
+            {:reason ::max-attempts-reached
+             :details {:retry-config config
+                       :last-failure last-failure}})))
 
 (defn backoff-time
   [slot-time-ms attempt]
-  (* (rand-int (- (quick-expt 2M attempt) 1M))
-     (bigdec slot-time-ms)))
+  (-> (quick-expt 2M attempt)
+      (-' 1M)
+      rand bigdec
+      (*' slot-time-ms)))
 
-(defmacro with-exponential-backoff
-  "Tries to run `body` for `max-attempts`. Uses an exponential backoff algorithm, meaning
-  that, for every attempt, it will wait K * `slot-time-ms`, where K is `2^c -
-  1`, `c` being the attempt index."
-  [slot-time-ms max-attempts catch-fn & body]
-  `(generic
-    (fn [attempt#]
-      (backoff-time ~slot-time-ms attempt#))
-    ::exponential-backoff
-    ~max-attempts
-    ~catch-fn
-    (fn [] ~@body)))
+(defn sleep-fn
+  [{:keys [strategy] :as sleep-args}]
+  (case strategy
+    ::simple-sleep        (constantly (:sleep-ms sleep-args))
+    ::exponential-backoff (partial backoff-time (:slot-time-ms sleep-args))))
+
+(defn config->runner
+  [{:keys [max-attempts strategy-parameters catch? failed?]
+    :or   {catch?  (constantly false)
+           failed? (constantly false)}
+    :as retry-config}]
+  (let [sleep (sleep-fn strategy-parameters)]
+    (fn [proc]
+      (loop [attempt  0
+             last-err nil]
+        (if (>= attempt max-attempts)
+          (throw! retry-config last-err)
+          (do (tank.utils/sleep (sleep attempt))
+              (let [[result v] (try-run proc :catch? catch? :failed? failed?)]
+                (if (#{:tank.try-run/failed :tank.try-run/exception} result)
+                  (recur (inc attempt) v)
+                  v))))))))
+
+(defmacro with
+  "Tries to run `body` using the provided configuration."
+  [runner-config & body]
+  `(let [run# (config->runner ~runner-config)]
+     (run# (fn [] ~@body))))
+
+(defn simple-sleep-config
+  "Between each attempt sleep for `sleep-ms` seconds."
+  [max-attempts sleep-ms & {:keys [catch? failed?] :as control-fns}]
+  (-> {:max-attempts        max-attempts
+       :strategy-parameters {:strategy ::simple-sleep
+                             :sleep-ms sleep-ms}}
+      (merge control-fns)))
+
+(defn exponential-backoff-config
+  "Uses an exponential backoff algorithm, meaning that, for every attempt, it
+  will wait K * `slot-time-ms`, where K is a random number between 0 and
+  `2^c - 1`, `c` being the attempt index."
+  [max-attempts slot-time-ms & {:keys [catch? failed?] :as control-fns}]
+  (-> {:max-attempts        max-attempts
+       :strategy-parameters {:strategy     ::exponential-backoff
+                             :slot-time-ms slot-time-ms}}
+      (merge control-fns)))
