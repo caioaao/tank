@@ -39,13 +39,15 @@
 
 (defn backoff-time
   [slot-time-ms attempt]
-  (* (rand-int (- (quick-expt 2M attempt) 1M))
-     (bigdec slot-time-ms)))
+  (-> (quick-expt 2M attempt)
+      (-' 1M)
+      rand bigdec
+      (*' slot-time-ms)))
 
 (defmacro with-exponential-backoff
   "Tries to run `body` for `max-attempts`. Uses an exponential backoff algorithm, meaning
-  that, for every attempt, it will wait K * `slot-time-ms`, where K is `2^c -
-  1`, `c` being the attempt index."
+  that, for every attempt, it will wait K * `slot-time-ms`, where K is a random number between 0 and
+  `2^c - 1`, `c` being the attempt index."
   [slot-time-ms max-attempts catch-fn & body]
   `(generic
     (fn [attempt#]
