@@ -18,7 +18,6 @@
 
 (def successful-fn (constantly ::success))
 
-
 (defspec circuit-breaker-trips-after-failed-attempts
   (prop/for-all [trip-threshold trip-threshold-gen
                  failing-fn failing-fn-gen]

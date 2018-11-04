@@ -63,5 +63,3 @@
        :strategy-parameters {:strategy     ::exponential-backoff
                              :slot-time-ms slot-time-ms}}
       (merge control-fns)))
-
-
