@@ -25,7 +25,7 @@
 
 (defn config->runner
   [{:keys [max-attempts strategy-parameters catch? failed?]
-    :or   {catch?  (constantly true)
+    :or   {catch?  (constantly false)
            failed? (constantly false)}
     :as retry-config}]
   (let [sleep (sleep-fn strategy-parameters)]
