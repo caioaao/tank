@@ -1,8 +1,9 @@
-(ns tank.utils)
+(ns tank.utils
+  (:require [clojure.core.async :as async]))
 
 (defn sleep
   [ms]
-  (Thread/sleep ms))
+  (async/<!! (async/timeout ms)))
 
 (defn buffer-full?
   [chan]

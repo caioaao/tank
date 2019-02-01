@@ -78,7 +78,7 @@ workflows:
             - lint
           filters:
             tags:
-              only: /[0-9]+(\.[0-9]+)*([ab][0-9]*)?/
+              only: /[0-9]+(\.[0-9]+)*(-(alpha|beta)[0-9]*)?/
             branches:
               ignore: /.*/
 

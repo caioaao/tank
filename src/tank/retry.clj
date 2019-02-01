@@ -42,6 +42,7 @@
 
 (defmacro with
   "Tries to run `body` using the provided configuration."
+  {:style/indent 1}
   [runner-config & body]
   `(let [run# (config->runner ~runner-config)]
      (run# (fn [] ~@body))))
