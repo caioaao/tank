@@ -1,6 +1,6 @@
-(ns tank.leaky-bucket
+(ns com.caioaao.tank.leaky-bucket
   (:require [clojure.core.async :as async]
-            [tank.utils :refer [sleep buffer-full?]]))
+            [com.caioaao.tank.utils :refer [sleep buffer-full?]]))
 
 (defn- channel [capacity leak-ms]
   (let [bucket (async/chan (async/buffer capacity))]

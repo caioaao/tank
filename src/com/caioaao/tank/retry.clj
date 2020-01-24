@@ -1,6 +1,6 @@
-(ns tank.retry
-  (:require [tank.utils :refer [quick-expt]]
-            [tank.try-run :refer [try-run]]))
+(ns com.caioaao.tank.retry
+  (:require [com.caioaao.tank.utils :as tank.utils :refer [quick-expt]]
+            [com.caioaao.tank.try-run :as try-run]))
 
 (defn- throw!
   [config last-failure]
@@ -35,8 +35,10 @@
         (if (>= attempt max-attempts)
           (throw! retry-config last-err)
           (do (tank.utils/sleep (sleep attempt))
-              (let [[result v] (try-run proc :catch? catch? :failed? failed?)]
-                (if (#{:tank.try-run/failed :tank.try-run/exception} result)
+              (let [[result v] (try-run/try-run proc
+                                                :catch? catch?
+                                                :failed? failed?)]
+                (if (#{::try-run/failed ::try-run/exception} result)
                   (recur (inc attempt) v)
                   v))))))))
 

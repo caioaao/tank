@@ -1,4 +1,4 @@
-(ns tank.try-run)
+(ns com.caioaao.tank.try-run)
 
 (defn try-run
   "Runs `proc` and returns a tuple denoting the result.

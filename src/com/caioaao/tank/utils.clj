@@ -1,4 +1,4 @@
-(ns tank.utils
+(ns com.caioaao.tank.utils
   (:require [clojure.core.async :as async]))
 
 (defn sleep

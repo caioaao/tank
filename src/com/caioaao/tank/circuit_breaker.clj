@@ -1,6 +1,6 @@
-(ns tank.circuit-breaker
-  (:require [tank.leaky-bucket :as leaky-bucket]
-            [tank.try-run :refer [try-run]]))
+(ns com.caioaao.tank.circuit-breaker
+  (:require [com.caioaao.tank.leaky-bucket :as leaky-bucket]
+            [com.caioaao.tank.try-run :as try-run]))
 
 (defprotocol ICircuitBreaker
   (tripped? [this])
@@ -17,10 +17,12 @@
       (throw (ex-info "Circuit breaker is tripped"
                       {:reason              ::tripped
                        :circuit-breaker     this}))
-      (let [[status result] (try-run proc :failed? failed? :catch? (constantly true))]
-        (when (#{:tank.try-run/failed :tank.try-run/exception} status)
+      (let [[status result] (try-run/try-run proc
+                                             :failed? failed?
+                                             :catch? (constantly true))]
+        (when (#{::try-run/failed ::try-run/exception} status)
           (leaky-bucket/put! leaky-bucket))
-        (when (= status :tank.try-run/exception)
+        (when (= status ::try-run/exception)
           (throw result))
         result)))
 
