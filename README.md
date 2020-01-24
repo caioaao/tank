@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/caioaao/tank/tree/master.svg?style=svg)](https://circleci.com/gh/caioaao/tank/tree/master) [![Clojars Project](https://img.shields.io/clojars/v/tank.svg)](https://clojars.org/tank)
+[![CircleCI](https://circleci.com/gh/caioaao/tank/tree/master.svg?style=svg)](https://circleci.com/gh/caioaao/tank/tree/master) [![Clojars Project](https://img.shields.io/clojars/v/com.caioaao/tank.svg)](https://clojars.org/com.caioaao/tank)
 
 # tank
 
@@ -8,7 +8,7 @@ Fault tolerant idioms for distributed systems.
 
 ### Retry
 
-The retry API is available in `tank.retry`. Currently there are two types of retry strategies:
+The retry API is available in `com.caioaao.tank.retry`. Currently there are two types of retry strategies:
 
 - Simple sleep: after each failed attempt, it will sleep for the specified amount of milliseconds
 - Exponential backoff: uses the [exponential backoff algorithm](https://en.wikipedia.org/wiki/Exponential_backoff) for determining how many seconds it should sleep between failed attempts.
@@ -16,7 +16,7 @@ The retry API is available in `tank.retry`. Currently there are two types of ret
 The usage is pretty simple. You build a config for your strategy and pass it to the macro that will run it for you:
 
 ```clojure
-(require '[tank.retry])
+(require '[com.caioaao.tank.retry :as tank.retry])
 
 (tank.retry/with (tank.retry/exponential-backoff-config 5 10 :catch? (constantly true))
   ...)
@@ -27,7 +27,7 @@ If it fails to successfully run in the amount of attempts (in this case 5), it w
 As you may want to treat non-exceptions as errors, you can also pass a `:failed?` function that will check the evaluated body and, if returns `true`, will treat it as a retriable error:
 
 ```clojure
-(require '[tank.retry])
+(require '[com.caioaao.tank.retry :as tank.retry])
 
 (tank.retry/with (tank.retry/exponential-backoff-config 5 10 :failed? (partial contains? :error))
   ...)
@@ -45,7 +45,7 @@ The way it is implemented is by using a [leaky bucket algorithm](https://en.wiki
 Here's an example:
 
 ```clojure
-(require '[tank.circuit-breaker])
+(require '[com.caioaao.tank.circuit-breaker :as tank.circuit-breaker])
 (defn http-request! [] ...)
 
 (let [circuit-breaker (tank.circuit-breaker/circuit-breaker 10 100)]
