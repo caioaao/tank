@@ -24,7 +24,7 @@
   (t/is (thrown-match? expected-exception-data
                        (try-run/try-run always-expected-exception)))
   (t/is (thrown-match?                        unexpected-exception-data
-                       (try-run/try-run always-unexpected-exception))))
+                                              (try-run/try-run always-unexpected-exception))))
 
 (defn catch? [ex]
   (case (-> (ex-data ex) :details)

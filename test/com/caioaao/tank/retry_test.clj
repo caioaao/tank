@@ -32,10 +32,10 @@
                    proc                             (fail-until n-attempts)]]
             (with-redefs [tank.utils/sleep sleep-mock]
               (tank.retry/with
-                  (tank.retry/simple-sleep-config
-                   (inc n-attempts) sleep-ms
-                   :catch? (constantly true))
-                (proc))
+               (tank.retry/simple-sleep-config
+                (inc n-attempts) sleep-ms
+                :catch? (constantly true))
+               (proc))
               (t/is (= (count @values-atom) n-attempts))
               (t/is (every? #{sleep-ms} @values-atom))))
 
