@@ -1,4 +1,4 @@
-(defproject tank "0.3.0"
+(defproject tank "1.0.0"
   :description "Tank: Fault tolerant idioms"
   :url "https://github.com/caioaao/tank"
   :license {:name "Eclipse Public License"
