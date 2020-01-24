@@ -1,4 +1,4 @@
-(defproject tank "0.3.0-alpha0"
+(defproject tank "0.3.0"
   :description "Tank: Fault tolerant idioms"
   :url "https://github.com/caioaao/tank"
   :license {:name "Eclipse Public License"
@@ -8,11 +8,7 @@
   :profiles {:dev {:dependencies [[org.clojure/test.check "0.10.0-alpha3"]
                                   [nubank/matcher-combinators "0.4.2"]]
                    :plugins      [[lein-cljfmt "0.6.1"]]}}
-  :release-tasks [["deploy" "clojars"]
-                  ["change" "version"
-                   "leiningen.release/bump-version" "patch"]
-                  ["vcs" "commit"]
-                  ["vcs" "push"]]
+  :release-tasks [["deploy" "clojars"]]
   :deploy-repositories [["clojars" {:url           "https://clojars.org/repo"
                                     :sign-releases false
                                     :username      :env/clojars_username
