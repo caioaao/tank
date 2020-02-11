@@ -39,9 +39,7 @@
                        (try-run/try-run always-unexpected-exception :catch? catch?))))
 
 (defn failed? [result]
-  (case (:foo result)
-    888 false
-    999 true))
+  (= 999 (:foo result)))
 
 (t/deftest with-fail-fn
   (t/is (= [::try-run/succeeded success-val] (try-run/try-run always-success :failed? failed?)))

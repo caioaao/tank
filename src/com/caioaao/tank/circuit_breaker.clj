@@ -1,6 +1,8 @@
 (ns com.caioaao.tank.circuit-breaker
   (:require [com.caioaao.tank.leaky-bucket :as leaky-bucket]
-            [com.caioaao.tank.try-run :as try-run]))
+            [com.caioaao.tank.try-run :as try-run]
+            [com.caioaao.tank.utils :as utils])
+  (:import java.io.Closeable))
 
 (defprotocol ICircuitBreaker
   (tripped? [this])
@@ -9,9 +11,6 @@
 
 (defrecord SimpleCircuitBreaker [leaky-bucket failed?]
   ICircuitBreaker
-  (tripped? [_this]
-    (leaky-bucket/full? leaky-bucket))
-
   (call! [this proc]
     (if (tripped? this)
       (throw (ex-info "Circuit breaker is tripped"
@@ -26,8 +25,15 @@
           (throw result))
         result)))
 
-  (shutdown! [_this]
-    (leaky-bucket/stop! leaky-bucket)))
+  (tripped? [_this]
+    (leaky-bucket/full? leaky-bucket))
+
+  (shutdown! [this]
+    (utils/close! this))
+
+  Closeable
+  (close [_this]
+    (utils/close! leaky-bucket)))
 
 (defn circuit-breaker
   "Creates a circuit breaker.
