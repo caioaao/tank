@@ -1,4 +1,4 @@
-(defproject com.caioaao/tank "1.0.0"
+(defproject com.caioaao/tank "1.1.0-SNAPSHOT"
   :description "Tank: Fault tolerant idioms"
   :url "https://github.com/caioaao/tank"
   :scm "https://github.com/caioaao/tank"
