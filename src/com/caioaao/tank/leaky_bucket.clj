@@ -16,7 +16,7 @@
     [this timeout-ms])
   (maybe-put! [this])
   (full? [this])
-  (stop! [this]))
+  (^:deprecated stop! [this]))
 
 (defrecord LeakyBucket [bucket-ch]
   ILeakyBucket
