@@ -50,28 +50,28 @@
 
 (defn expected-backoff [slot-time-ms n-attempts]
   "For more info, see formula in https://en.wikipedia.org/wiki/Exponential_backoff#Expected_backoff"
-  (/ (*' slot-time-ms (-' (tank.utils/quick-expt 2M n-attempts) 1M)) 2M))
+  (with-precision 60 (/ (*' slot-time-ms (-' (tank.utils/quick-expt 2M n-attempts) 1M)) 2M)))
+
+(defn avg [vs] (with-precision 60 (/ (reduce +' vs) (count vs))))
 
 (defn roughly? [expected v ratio]
-  (< (-' ratio) (-' (/ v expected) 1M) ratio))
+  (with-precision 60 (< (-' ratio) (-' (/ v expected) 1M) ratio)))
+
+(defn last-backoff [retry-config n-attempts]
+  (let [{:keys [values-atom sleep-mock]} (sleep-mock)
+        proc                             (fail-until n-attempts)]
+    (with-redefs [tank.utils/sleep sleep-mock]
+      (tank.retry/with retry-config (proc)))
+    (last @values-atom)))
 
 (t/deftest exponential-backoff
   (checking "average sleep ms matches expected" (chuck/times 100)
-            [slot-time-ms (gen/fmap inc gen/pos-int)
-             :let [n-attempts    10
-                   slot-time-ms  1
-                   retry-config  (tank.retry/exponential-backoff-config n-attempts slot-time-ms :catch? (constantly true))
-                   run-times     500
-                   last-backoffs (atom [])]]
-            (loop [run-counter 0]
-              (when (< run-counter run-times)
-                (let [{:keys [values-atom sleep-mock]} (sleep-mock)
-                      proc                             (fail-until n-attempts)]
-                  (with-redefs [tank.utils/sleep sleep-mock]
-                    (tank.retry/with retry-config (proc)))
-                  (swap! last-backoffs conj (last @values-atom)))
-                (recur (inc run-counter))))
-            (with-precision 10
-              (t/is (roughly? (expected-backoff slot-time-ms (dec n-attempts))
-                              (/ (apply +' @last-backoffs) run-times)
-                              0.15M)))))
+            [n-attempts (gen/choose 5 15)
+             :let [slot-time-ms 1
+                   retry-config  (tank.retry/exponential-backoff-config n-attempts
+                                                                        slot-time-ms
+                                                                        :catch? (constantly true))
+                   last-backoffs (repeatedly 500 #(last-backoff retry-config n-attempts))]]
+            (t/is (roughly? (expected-backoff slot-time-ms (dec n-attempts))
+                            (avg last-backoffs)
+                            0.15M))))
