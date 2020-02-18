@@ -7,7 +7,7 @@
 (defprotocol ICircuitBreaker
   (tripped? [this])
   (call! [this proc])
-  (^:deprecated shutdown! [this]))
+  (^{:deprecated "1.1.0"} shutdown! [this]))
 
 (defrecord SimpleCircuitBreaker [leaky-bucket failed?]
   ICircuitBreaker

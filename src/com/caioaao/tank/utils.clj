@@ -2,7 +2,8 @@
   (:require [clojure.core.async :as async]
             [clojure.core.async.impl.protocols :as async.impl])
   (:import java.io.Closeable
-           clojure.core.async.impl.channels.ManyToManyChannel))
+           clojure.core.async.impl.channels.ManyToManyChannel
+           java.time.Instant))
 
 (defn sleep
   [ms]
@@ -23,3 +24,6 @@
 
 (defn close! [^Closeable resource]
   (.close resource))
+
+(defn now []
+  (java.time.Instant/now))
