@@ -11,12 +11,16 @@
     bucket))
 
 (defprotocol ILeakyBucket
-  (put!
+  (offer-token! [this])
+  (full? [this])
+  (^{:deprecated "1.1.0"} put!
     [this]
     [this timeout-ms])
-  (maybe-put! [this])
-  (full? [this])
-  (^{:deprecated "1.1.0"} stop! [this]))
+  (^{:deprecated "1.1.0"
+     :doc "Use `offer-token!` instead"}
+   maybe-put! [this])
+  (^{:deprecated "1.1.0"}
+   stop! [this]))
 
 (defrecord LeakyBucket [bucket-ch]
   ILeakyBucket
@@ -30,10 +34,12 @@
         timeout-ch ::timed-out
         [[bucket-ch ::bucket-token]] ::sent)))
 
-  (maybe-put! [this]
+  (offer-token! [this]
     (if (async/offer! channel ::bucket-token)
       ::sent
       ::dropped))
+
+  (maybe-put! [this] (offer-token! this))
 
   (full? [this]
     (buffer-full? bucket-ch))

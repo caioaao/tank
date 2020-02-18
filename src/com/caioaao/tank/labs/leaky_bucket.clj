@@ -37,28 +37,7 @@
 
 (defrecord LeakyBucketTimestampBased [state-ref]
   leaky-bucket/ILeakyBucket
-  (put! [this]
-    (dosync
-     (loop [state @state-ref
-            t     (utils/now)]
-       (if-let [state' (offer-token state t)]
-         (do (ref-set state-ref state') ::sent)
-         (do (utils/sleep 1)
-             (recur @state-ref (utils/now)))))))
-
-  (put! [this timeout-ms]
-    (let [t-0 (utils/now)]
-      (dosync
-       (loop [state @state-ref
-              t     (utils/now)]
-         (if (>= (- (inst-ms t) (inst-ms t-0)) timeout-ms)
-           ::dropped
-           (if-let [state' (offer-token state t)]
-             (do (ref-set state-ref state') ::sent)
-             (do (utils/sleep 1)
-                 (recur @state-ref (utils/now)))))))))
-
-  (maybe-put! [this]
+  (offer-token! [this]
     (dosync
      (if-let [state' (offer-token @state-ref
                                   (utils/now))]
