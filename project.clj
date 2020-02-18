@@ -8,11 +8,13 @@
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/core.async "0.7.559"]]
+  :managed-dependencies [[com.taoensso/carmine "2.19.1"]]
   :profiles {:source-paths ["dev"]
              :dev          {:dependencies [[org.clojure/test.check "0.10.0"]
                                            [nubank/matcher-combinators "1.3.1"]
                                            [com.gfredericks/test.chuck "0.2.10"]
-                                           [org.clojure/tools.namespace "0.3.1"]]
+                                           [org.clojure/tools.namespace "0.3.1"]
+                                           [com.taoensso/carmine]]
                             :plugins      [[lein-cljfmt "0.6.6"]]
                             :global-vars  {*warn-on-reflection* true}}}
   :release-tasks [["deploy" "clojars"]]
